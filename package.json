@@ -1,0 +1,26 @@
+{
+    "name": "git-tales-server",
+    "version": "1.0.0",
+    "description": "Change commits to history",
+    "main": "index.js",
+    "scripts": {
+        "dev": "ts-node src/index.ts",
+        "build": "tsc",
+        "start": "node dist/index.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/leggok/git-tales-server.git"
+    },
+    "author": "leggok",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/leggok/git-tales-server/issues"
+    },
+    "homepage": "https://github.com/leggok/git-tales-server#readme",
+    "devDependencies": {
+        "@types/node": "^24.3.0",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.9.2"
+    }
+}
