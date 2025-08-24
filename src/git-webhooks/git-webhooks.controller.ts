@@ -1,10 +1,15 @@
 import { Controller, Post, UnauthorizedException, Req, Headers } from "@nestjs/common";
 import * as crypto from "crypto";
 import { CommitsService } from "../commits/commits.service";
+import { OpenaiService } from "../openai/openai.service";
+import { Commit } from "../commits/commit.schema";
 
 @Controller("events/git-webhooks")
 export class GitWebhooksController {
-    constructor(private commitsService: CommitsService) {}
+    constructor(
+        private commitsService: CommitsService,
+        private openaiService: OpenaiService
+    ) {}
 
     @Post()
     async handleWebhook(@Req() req: Request, @Headers("x-hub-signature-256") signature: string) {
@@ -21,8 +26,28 @@ export class GitWebhooksController {
             throw new UnauthorizedException("Invalid signature");
         }
 
-        // Якщо підпис ок – працюєш з подією
-        await this.commitsService.createFromWebhook(req.body as any);
-        return { success: true };
+        // Зберігаємо коміти в Mongo
+        const savedCommits = await this.commitsService.createFromWebhook(req.body as any);
+
+        // Формуємо масив повідомлень комітів
+        const commitMessages = savedCommits.map((c: any) => c.commit_message);
+
+        // Отримуємо відповіді від OpenAI
+        // const haikuResponses = await this.openaiService.haikuAboutAI(commitMessages);
+
+        // Мапимо і додаємо haiku до відповідного коміта
+        // for (let i = 0; i < savedCommits.length; i++) {
+        //     await this.commitsService.updateCommitHaiku(
+        //         savedCommits[i]._id as any,
+        //         haikuResponses[i]
+        //     );
+        // }
+
+        return {
+            message: "Webhook received and processed successfully",
+            savedCommits,
+            commitMessages
+            // haikuResponses
+        };
     }
 }

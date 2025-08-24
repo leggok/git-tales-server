@@ -1,7 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
-import * as mongoose from "mongoose";
-import AutoIncrementFactory from "mongoose-sequence";
 
 @Schema({ collection: "commits" })
 export class Commit extends Document {
@@ -24,7 +22,10 @@ export class Commit extends Document {
     commit_message: string;
 
     @Prop()
-    commit_tree_id: string;
+    git_commit_tree_id: string;
+
+    @Prop()
+    git_commit_id: string;
 
     @Prop()
     commit_url: string;
@@ -55,10 +56,9 @@ export class Commit extends Document {
 
     @Prop({ type: [String] })
     commit_modified_files: string[];
+
+    @Prop({ default: null })
+    commit_haiku: string;
 }
 
 export const CommitSchema = SchemaFactory.createForClass(Commit);
-
-// Apply auto-increment plugin for commit_id
-const AutoIncrement = AutoIncrementFactory(mongoose);
-CommitSchema.plugin(AutoIncrement, { inc_field: "commit_id" });
