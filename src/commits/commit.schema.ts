@@ -7,16 +7,7 @@ export class Commit extends Document {
     commit_id: number;
 
     @Prop()
-    repo_name: string;
-
-    @Prop()
-    repo_link: string;
-
-    @Prop()
-    repo_description: string;
-
-    @Prop()
-    repo_language: string;
+    repo_id: number;
 
     @Prop()
     commit_message: string;
@@ -34,10 +25,7 @@ export class Commit extends Document {
     commit_timestamp: Date;
 
     @Prop()
-    repo_owner_name: string;
-
-    @Prop()
-    repo_owner_link: string;
+    user_id: number;
 
     @Prop()
     commit_sender_name: string;
