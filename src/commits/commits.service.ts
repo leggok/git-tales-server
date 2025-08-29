@@ -55,7 +55,7 @@ export class CommitsService {
         const savedCommits: Commit[] = [];
         for (const c of payload.commits) {
             const doc = {
-                repo_id: repo.id,
+                repo_id: repo.repo_id,
                 repo_name: repo.name,
                 repo_link: repo.html_url,
                 repo_description: repo.description,
