@@ -12,6 +12,9 @@ export class Commit extends Document {
     @Prop()
     commit_message: string;
 
+    @Prop({ default: null })
+    branch: string;
+
     @Prop()
     git_commit_tree_id: string;
 

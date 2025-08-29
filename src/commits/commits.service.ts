@@ -10,6 +10,7 @@ interface WebhookPayload {
     sender: any;
     compare: string;
     commits: any[];
+    ref: string;
 }
 
 @Injectable()
@@ -51,6 +52,8 @@ export class CommitsService {
 
     async createFromWebhook(payload: WebhookPayload) {
         const repo = payload.repository;
+        const ref = payload.ref;
+        const branch = ref.split("/").pop();
 
         // Пошук репозиторію у БД
         const repoRes = await this.repositoryService.getRepository(repo.id);
@@ -84,6 +87,7 @@ export class CommitsService {
         const savedCommits: Commit[] = [];
         for (const c of payload.commits) {
             const doc = {
+                branch,
                 repo_id: repoDoc.repo_id,
                 repo_name: repo.name,
                 repo_link: repo.html_url,
