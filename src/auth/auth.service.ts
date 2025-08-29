@@ -16,7 +16,6 @@ export class AuthService {
 
     async register(createUserDto: CreateUserDto): Promise<Result<Tokens, AppError>> {
         try {
-            console.log("createUserDto", createUserDto);
             // Hash the password
             const hashResult = await PasswordUtils.hashPassword(createUserDto.password);
             if (hashResult.isErr()) {

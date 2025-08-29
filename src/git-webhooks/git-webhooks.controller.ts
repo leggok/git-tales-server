@@ -37,9 +37,6 @@ export class GitWebhooksController {
 
         const savedCommits = result as Commit[];
 
-        // Формуємо масив повідомлень комітів
-        console.log("savedCommits", savedCommits);
-
         const commitMessages = savedCommits.map((c) => c.commit_message);
 
         // Отримуємо відповіді від OpenAI

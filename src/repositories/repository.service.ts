@@ -31,8 +31,6 @@ export class RepositoryService {
     async getRepository(git_repo_id: number) {
         try {
             const repo = await this.repositoryModel.findOne({ git_repo_id });
-            console.log("git_repo_id", git_repo_id);
-            console.log("repo git_repo_id", repo);
 
             return ok(repo);
         } catch (error) {
@@ -42,9 +40,8 @@ export class RepositoryService {
         }
     }
 
-    async createRepository(repo: Repository) {
+    async createRepository(repo: Partial<Repository>) {
         try {
-            console.log(" create repo", repo);
             const newRepo = await this.repositoryModel.create(repo);
             return ok(newRepo);
         } catch (error) {

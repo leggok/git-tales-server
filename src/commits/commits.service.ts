@@ -2,7 +2,8 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { Commit } from "./commit.schema";
-import { ok } from "neverthrow";
+import { err, ok } from "neverthrow";
+import { RepositoryService } from "src/repositories/repository.service";
 
 interface WebhookPayload {
     repository: any;
@@ -13,7 +14,10 @@ interface WebhookPayload {
 
 @Injectable()
 export class CommitsService {
-    constructor(@InjectModel(Commit.name) private commitModel: Model<Commit>) {}
+    constructor(
+        @InjectModel(Commit.name) private commitModel: Model<Commit>,
+        private repositoryService: RepositoryService
+    ) {}
 
     async getCommitsFromRepository(repositoryId: number) {
         const commits = await this.commitModel.find({ repo_id: repositoryId });
@@ -47,15 +51,40 @@ export class CommitsService {
 
     async createFromWebhook(payload: WebhookPayload) {
         const repo = payload.repository;
+
+        // Пошук репозиторію у БД
+        const repoRes = await this.repositoryService.getRepository(repo.id);
+        if (repoRes.isErr()) {
+            return err(repoRes.error);
+        }
+
+        let repoDoc = repoRes.value;
+
+        // Якщо не знайдено – створюємо
+        if (!repoDoc) {
+            const newRepoRes = await this.repositoryService.createRepository({
+                git_repo_id: repo.id,
+                repo_name: repo.name,
+                repo_link: repo.html_url,
+                repo_description: repo.description,
+                repo_language: repo.language,
+                repo_owner_id: repo.owner.id
+            });
+            if (newRepoRes.isErr()) {
+                return err(newRepoRes.error);
+            }
+
+            repoDoc = newRepoRes.value;
+        }
+
         const sender = payload.sender;
         const compare = payload.compare;
-        console.log("payload.commits", payload.commits);
         // Формуємо документи
         // Створюємо коміти по одному
         const savedCommits: Commit[] = [];
         for (const c of payload.commits) {
             const doc = {
-                repo_id: repo.repo_id,
+                repo_id: repoDoc.repo_id,
                 repo_name: repo.name,
                 repo_link: repo.html_url,
                 repo_description: repo.description,
