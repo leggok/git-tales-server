@@ -14,6 +14,9 @@ export class GitWebhooksController {
 
     @Post()
     async handleWebhook(@Req() req: Request, @Headers("x-hub-signature-256") signature: string) {
+        const event = req.headers["x-github-event"];
+        console.log("event", event);
+
         const secret = process.env.GITHUB_WEBHOOK_SECRET;
         if (!secret) {
             throw new Error("GITHUB_WEBHOOK_SECRET is not set");
