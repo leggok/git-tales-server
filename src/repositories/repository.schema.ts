@@ -7,6 +7,9 @@ export class Repository extends Document {
     repo_id: number;
 
     @Prop()
+    git_repo_id: number;
+
+    @Prop()
     repo_name: string;
 
     @Prop()

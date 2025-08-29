@@ -3,6 +3,7 @@ import * as crypto from "crypto";
 import { CommitsService } from "../commits/commits.service";
 import { OpenaiService } from "../openai/openai.service";
 import { Commit } from "../commits/commit.schema";
+import { AppError } from "../common/errors/app.error";
 
 @Controller("events/git-webhooks")
 export class GitWebhooksController {
@@ -27,10 +28,19 @@ export class GitWebhooksController {
         }
 
         // Зберігаємо коміти в Mongo
-        const savedCommits = await this.commitsService.createFromWebhook(req.body as any);
+        const result = await this.commitsService.createFromWebhook(req.body as any);
+
+        // Перевірка на помилку
+        if (result instanceof AppError) {
+            throw result;
+        }
+
+        const savedCommits = result as Commit[];
 
         // Формуємо масив повідомлень комітів
-        const commitMessages = savedCommits.map((c: any) => c.commit_message);
+        console.log("savedCommits", savedCommits);
+
+        const commitMessages = savedCommits.map((c) => c.commit_message);
 
         // Отримуємо відповіді від OpenAI
         // const haikuResponses = await this.openaiService.haikuAboutAI(commitMessages);

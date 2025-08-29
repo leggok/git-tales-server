@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { Commit } from "./commit.schema";
+import { ok } from "neverthrow";
 
 interface WebhookPayload {
     repository: any;
@@ -13,6 +14,36 @@ interface WebhookPayload {
 @Injectable()
 export class CommitsService {
     constructor(@InjectModel(Commit.name) private commitModel: Model<Commit>) {}
+
+    async getCommitsFromRepository(repositoryId: number) {
+        const commits = await this.commitModel.find({ repo_id: repositoryId });
+        return ok(commits);
+    }
+
+    async getCommit(commitId: string) {
+        const commit = await this.commitModel.findById(commitId);
+        return ok(commit);
+    }
+
+    async createCommit(commit: Commit) {
+        const newCommit = await this.commitModel.create(commit);
+        return ok(newCommit);
+    }
+
+    async updateCommit(commitId: string, commit: Commit) {
+        await this.commitModel.findByIdAndUpdate(commitId, commit);
+        return ok(commit);
+    }
+
+    async deleteCommit(commitId: string) {
+        await this.commitModel.findByIdAndDelete(commitId);
+        return ok(commitId);
+    }
+
+    async deleteAllCommits() {
+        await this.commitModel.deleteMany();
+        return ok(true);
+    }
 
     async createFromWebhook(payload: WebhookPayload) {
         const repo = payload.repository;

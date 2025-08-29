@@ -4,6 +4,8 @@ import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { GitWebhooksController } from "./git-webhooks/git-webhooks.controller";
+import { CommitsController } from "./commits/commits.controller";
+import { RepositoryController } from "./repositories/repository.controller";
 import { Commit, CommitSchema } from "./commits/commit.schema";
 import { CommitsService } from "./commits/commits.service";
 import { OpenaiService } from "./openai/openai.service";
@@ -11,6 +13,7 @@ import { Connection } from "mongoose";
 import { Repository, RepositorySchema } from "./repositories/repository.schema";
 import { User, UserSchema } from "./users/user.schema";
 import { AuthModule } from "./auth/auth.module";
+import { RepositoryService } from "./repositories/repository.service";
 
 console.log(process.env.MONGO_URI);
 
@@ -57,7 +60,7 @@ console.log(process.env.MONGO_URI);
         ]),
         AuthModule
     ],
-    controllers: [AppController, GitWebhooksController],
-    providers: [AppService, CommitsService, OpenaiService]
+    controllers: [AppController, GitWebhooksController, RepositoryController, CommitsController],
+    providers: [AppService, CommitsService, OpenaiService, RepositoryService]
 })
 export class AppModule {}
