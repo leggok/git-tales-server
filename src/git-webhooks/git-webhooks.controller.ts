@@ -24,7 +24,9 @@ export class GitWebhooksController {
         const body = JSON.stringify(req.body);
 
         const hmac = crypto.createHmac("sha256", secret);
+        console.log("hmac", hmac);
         const digest = `sha256=${hmac.update(body).digest("hex")}`;
+        console.log("digest", digest);
 
         if (signature !== digest) {
             throw new UnauthorizedException("Invalid signature");
