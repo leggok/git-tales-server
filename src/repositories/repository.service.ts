@@ -40,6 +40,23 @@ export class RepositoryService {
         }
     }
 
+    async getRepositoryByName(repo_name: string) {
+        try {
+            const repo = await this.repositoryModel.findOne({ repo_name });
+
+            return ok(repo);
+        } catch (error) {
+            return err(
+                new AppError(
+                    "Failed to get repository by name",
+                    500,
+                    "REPOSITORY_GET_BY_NAME_FAILED",
+                    error
+                )
+            );
+        }
+    }
+
     async createRepository(repo: Partial<Repository>) {
         try {
             const newRepo = await this.repositoryModel.create(repo);
@@ -60,6 +77,37 @@ export class RepositoryService {
         } catch (error) {
             return err(
                 new AppError("Failed to update repository", 500, "REPOSITORY_UPDATE_FAILED", error)
+            );
+        }
+    }
+
+    /**
+     * Fetch pull requests for a given GitHub repository
+     * @param owner GitHub username or organization that owns the repository
+     * @param repo Repository name
+     */
+    async getPullRequests(owner: string, repo: string) {
+        try {
+            // Lazily import to avoid forcing users to install if they don't need this feature
+            const { Octokit } = await import("@octokit/core");
+
+            const octokit = new Octokit({
+                auth: process.env.GITHUB_TOKEN ?? ""
+            });
+
+            const response = await octokit.request("GET /repos/{owner}/{repo}/pulls", {
+                owner,
+                repo,
+                state: "all",
+                headers: {
+                    "X-GitHub-Api-Version": "2022-11-28"
+                }
+            });
+
+            return ok(response.data);
+        } catch (error) {
+            return err(
+                new AppError("Failed to get pull requests", 500, "PULL_REQUESTS_GET_FAILED", error)
             );
         }
     }

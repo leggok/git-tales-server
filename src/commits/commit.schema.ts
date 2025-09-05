@@ -3,14 +3,25 @@ import { Document } from "mongoose";
 
 @Schema({ collection: "commits" })
 export class Commit extends Document {
+    /** Unique SHA of the commit */
     @Prop({ unique: true })
-    commit_id: number;
+    commit_id: string;
 
     @Prop()
     repo_id: number;
 
+    /**
+     * Associated pull request id (link to PullRequest.pr_id)
+     */
+    @Prop()
+    pr_id: number;
+
     @Prop()
     commit_message: string;
+
+    /** Author login/username */
+    @Prop()
+    author: string;
 
     @Prop({ default: null })
     branch: string;
@@ -24,14 +35,13 @@ export class Commit extends Document {
     @Prop()
     commit_url: string;
 
+    /** ISO date of commit (committed_at) */
     @Prop()
-    commit_timestamp: Date;
+    committed_at: Date;
 
+    // Keeping existing optional metadata for backwards compatibility
     @Prop()
     user_id: number;
-
-    @Prop()
-    commit_sender_name: string;
 
     @Prop()
     commit_sender_avatar: string;

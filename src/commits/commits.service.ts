@@ -2,8 +2,10 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { Commit } from "./commit.schema";
-import { err, ok } from "neverthrow";
+import { Result, err, ok } from "neverthrow";
 import { RepositoryService } from "src/repositories/repository.service";
+import { PullRequest } from "../pull-requests/pull-request.schema";
+import { AppError } from "../common/errors/app.error";
 
 interface WebhookPayload {
     repository: any;
@@ -48,6 +50,75 @@ export class CommitsService {
     async deleteAllCommits() {
         await this.commitModel.deleteMany();
         return ok(true);
+    }
+
+    /**
+     * Fetch commits for a given Pull Request (by pr.commits_url) and persist them.
+     * @param owner GitHub repository owner (user or organization)
+     * @param repo Repository name
+     * @param pr PullRequest document
+     */
+    async fetchAndSavePrCommits(
+        owner: string,
+        repo: string,
+        pr: PullRequest
+    ): Promise<Result<Commit[], AppError>> {
+        try {
+            const { Octokit } = await import("@octokit/core");
+            const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN ?? "" });
+
+            // GitHub REST: GET /repos/{owner}/{repo}/pulls/{pull_number}/commits
+            const response = await octokit.request(
+                "GET /repos/{owner}/{repo}/pulls/{pull_number}/commits",
+                {
+                    owner,
+                    repo,
+                    pull_number: pr.number,
+                    headers: {
+                        "X-GitHub-Api-Version": "2022-11-28"
+                    }
+                }
+            );
+
+            const commitsData = response.data as any[];
+            const saved: Commit[] = [];
+
+            for (const c of commitsData) {
+                const doc = await this.commitModel.findOneAndUpdate(
+                    { commit_id: c.sha },
+                    {
+                        commit_id: c.sha,
+                        repo_id: pr.repo_id,
+                        pr_id: pr.pr_id,
+                        branch: pr.head_branch ?? null,
+                        commit_message: c.commit?.message,
+                        git_commit_tree_id: c.commit?.tree?.sha,
+                        git_commit_id: c.sha,
+                        commit_url: c.html_url,
+                        committed_at: c.commit?.author?.date
+                            ? new Date(c.commit.author.date)
+                            : undefined,
+                        author: c.author?.login ?? c.commit?.author?.name
+                    },
+                    {
+                        upsert: true,
+                        new: true
+                    }
+                );
+                saved.push(doc);
+            }
+
+            return ok(saved);
+        } catch (error) {
+            return err(
+                new AppError(
+                    `Failed to fetch commits for PR #${pr.number}`,
+                    500,
+                    "PR_COMMITS_FETCH_FAILED",
+                    error
+                )
+            );
+        }
     }
 
     async createFromWebhook(payload: WebhookPayload) {

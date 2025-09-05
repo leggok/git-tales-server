@@ -14,6 +14,7 @@ import { Repository, RepositorySchema } from "./repositories/repository.schema";
 import { User, UserSchema } from "./users/user.schema";
 import { AuthModule } from "./auth/auth.module";
 import { RepositoryService } from "./repositories/repository.service";
+import { PullRequestsModule } from "./pull-requests/pull-requests.module";
 
 console.log(process.env.MONGO_URI);
 
@@ -29,13 +30,10 @@ console.log(process.env.MONGO_URI);
         MongooseModule.forFeatureAsync([
             {
                 name: Commit.name,
-                useFactory: async (connection: Connection) => {
-                    const schema = CommitSchema;
-                    const AutoIncrement = require("mongoose-sequence")(connection);
-                    schema.plugin(AutoIncrement, { inc_field: "commit_id" });
-                    return schema;
-                },
-                inject: [getConnectionToken()]
+                useFactory: async () => {
+                    // Commit IDs are Git SHA strings; no auto-increment needed
+                    return CommitSchema;
+                }
             },
             {
                 name: Repository.name,
@@ -58,7 +56,8 @@ console.log(process.env.MONGO_URI);
                 inject: [getConnectionToken()]
             }
         ]),
-        AuthModule
+        AuthModule,
+        PullRequestsModule
     ],
     controllers: [AppController, GitWebhooksController, RepositoryController, CommitsController],
     providers: [AppService, CommitsService, OpenaiService, RepositoryService]
